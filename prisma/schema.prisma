@@ -7,12 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Referral {
-  id          String   @id @default(uuid())
-  code        String   @unique
-  referrerId  String
-  refereeId   String?
-  reward      Float    @default(5.0)
-  used        Boolean  @default(false)
-  createdAt   DateTime @default(now())
+model ReferralCode {
+  id            String        @id @default(uuid())
+  userId        String        @unique
+  code          String        @unique
+  totalReferred Int           @default(0)
+  totalEarned   Float         @default(0)
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  referrals     ReferralUse[]
+}
+
+model ReferralUse {
+  id              String       @id @default(uuid())
+  referralCodeId  String
+  referralCode    ReferralCode @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+  referrerId      String       // User who owns the code
+  referredUserId  String       @unique // New user who used the code
+  referrerReward  Float        // Reward for referrer
+  referredReward  Float        // Reward for new user
+  status          String       // pending, completed, expired
+  usedAt          DateTime     @default(now())
+  completedAt     DateTime?
+}
+
+model Reward {
+  id          String    @id @default(uuid())
+  userId      String
+  type        String    // referral_bonus, signup_bonus
+  amount      Float
+  description String
+  isRedeemed  Boolean   @default(false)
+  redeemedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
 }
